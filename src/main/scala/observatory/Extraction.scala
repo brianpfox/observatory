@@ -9,17 +9,7 @@ import org.apache.spark.sql.SparkSession
 /**
   * 1st milestone: data extraction
   */
-object Extraction {
-
-  import org.apache.log4j.{Level, Logger}
-  Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
-
-  val spark: SparkSession =
-    SparkSession
-      .builder()
-      .appName("Observatory")
-      .config("spark.master", "local")
-      .getOrCreate()
+object Extraction extends SparkSessionTrait {
 
   /** @return The filesystem path of the given resource */
   def fsPath(resource: String): String =
