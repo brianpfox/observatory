@@ -25,9 +25,9 @@ trait ExtractionTest extends FunSuite {
     ), "small test file")
   }
 
-  test("locationYearlyAverageRecords full file") {
-    val temps = Extraction.locateTemperatures(1975, "/stations.csv", "/1975.csv")
-    val result = Extraction.locationYearlyAverageRecords(temps)
+//  test("locationYearlyAverageRecords full file") {
+//    val temps = Extraction.locateTemperatures(1975, "/stations.csv", "/1975.csv")
+//    val result = Extraction.locationYearlyAverageRecords(temps)
 //    assert(), "full size file")
-  }
+//  }
 }
