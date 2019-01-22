@@ -1,11 +1,14 @@
 package observatory
 
 import com.sksamuel.scrimage.{Image, Pixel}
+import scala.math.{Pi, sin, cos, acos, abs}
 
 /**
   * 2nd milestone: basic visualization
   */
-object Visualization {
+object Visualization extends SparkSessionTrait {
+
+  final val EARTH_RADIUS: Double = 6371.0
 
   /**
     * @param temperatures Known temperatures: pairs containing a location and the temperature at this location
@@ -13,7 +16,24 @@ object Visualization {
     * @return The predicted temperature at `location`
     */
   def predictTemperature(temperatures: Iterable[(Location, Temperature)], location: Location): Temperature = {
+    val tempRDD = spark.sparkContext.parallelize(temperatures.toSeq)
+
+    // map over tempRDD computing distance from each location to the target location.
     ???
+  }
+
+  def greatCircleDistance(arbitraryPoint: Location, knownPoint: Location): Double = {
+    val deltaSig = {
+      if (arbitraryPoint == knownPoint) 0
+      else if (arbitraryPoint.lat == -1 * knownPoint.lat && arbitraryPoint.lon == -1 * (180 - knownPoint.lon)) Pi
+      else {
+        val sins = sin(arbitraryPoint.lat) * sin(knownPoint.lat)
+        val coss = cos(arbitraryPoint.lat) * cos(knownPoint.lat) * cos(abs(arbitraryPoint.lon - knownPoint.lon))
+        acos(sins + coss)
+      }
+    }
+
+    EARTH_RADIUS * deltaSig
   }
 
   /**
