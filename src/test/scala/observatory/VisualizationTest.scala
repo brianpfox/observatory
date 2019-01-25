@@ -54,4 +54,21 @@ trait VisualizationTest extends FunSuite {//} with Checkers {
       "very close location to one of the points")
   }
 
+  test("interpolateColor") {
+    val points = List(
+      (60.0, Color(255, 255, 255)),
+      (32.0, Color(255, 0, 0)),
+      (12.0, Color(255, 255, 0)),
+      (0.0, Color(0, 255, 255)),
+      (-15.0, Color(0, 0, 255)),
+      (-27.0, Color(255, 0, 255)),
+      (-50.0, Color(33, 0, 107)),
+      (-60.0, Color(0, 0, 0))
+    )
+
+    assert(Visualization.interpolateColor(points, 0.0) === Color(0, 255, 255), "Equals a point")
+    assert(Visualization.interpolateColor(points, 6.0) === Color(127, 255, 127), "Halfway between points 1")
+    assert(Visualization.interpolateColor(points, 46.0) === Color(255, 127, 127), "Halfway between points 1")
+  }
+
 }

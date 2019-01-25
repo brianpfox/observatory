@@ -65,7 +65,17 @@ object Visualization extends SparkSessionTrait {
     * @return The color that corresponds to `value`, according to the color scale defined by `points`
     */
   def interpolateColor(points: Iterable[(Temperature, Color)], value: Temperature): Color = {
-    ???
+    //https://en.wikipedia.org/wiki/Linear_interpolation
+    val dist_point = points.map(point => (point._1 - value, point))
+    val (_, lower) = dist_point.filter(_._1 < 0).maxBy(_._1)
+    val (_, upper) = dist_point.filter(_._1 >= 0).minBy(_._1)
+
+    val quotient = (value - lower._1) / (upper._1 - lower._1)
+    val red = lower._2.red * (1 - quotient) + upper._2.red * quotient
+    val green = lower._2.green * (1 - quotient) + upper._2.green * quotient
+    val blue = lower._2.blue * (1 - quotient) + upper._2.blue * quotient
+
+    Color(red.toInt, green.toInt, blue.toInt)
   }
 
   /**
