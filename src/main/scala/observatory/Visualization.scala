@@ -8,7 +8,8 @@ import scala.math.{Pi, sin, cos, acos, abs}
   */
 object Visualization extends SparkSessionTrait {
 
-  final val EARTH_RADIUS: Double = 6371.0
+  val RADIUS: Double = 6371.0
+  final val p: Double = 2.0
 
   /**
     * @param temperatures Known temperatures: pairs containing a location and the temperature at this location
@@ -19,21 +20,43 @@ object Visualization extends SparkSessionTrait {
     val tempRDD = spark.sparkContext.parallelize(temperatures.toSeq)
 
     // map over tempRDD computing distance from each location to the target location.
-    ???
+    val dist_tempRDD = tempRDD.map(_ match {
+      case (knownLocation: Location, temperature: Temperature) =>
+        (greatCircleDistance()(location, knownLocation), temperature)
+    }).cache()
+
+    val zeroRDD = dist_tempRDD.filter(_._1 == 0.0)
+    if (zeroRDD.count() > 0) zeroRDD.take(1)(0)._2
+    else {
+      //https://en.wikipedia.org/wiki/Inverse_distance_weighting
+      val weightedTempsRDD = dist_tempRDD.map(_ match {
+        case (distance: Double, temperature: Temperature) => {
+          if (distance > 1) {
+            (1 / Math.pow(distance, p)) * temperature
+          }
+          else
+            temperature
+        }
+      })
+      weightedTempsRDD.sum()
+    }
   }
 
-  def greatCircleDistance(arbitraryPoint: Location, knownPoint: Location): Double = {
+  def greatCircleDistance(radius: Double = Visualization.RADIUS)(arbitraryPoint: Location, knownPoint: Location): Double = {
     val deltaSig = {
       if (arbitraryPoint == knownPoint) 0
-      else if (arbitraryPoint.lat == -1 * knownPoint.lat && arbitraryPoint.lon == -1 * (180 - knownPoint.lon)) Pi
       else {
-        val sins = sin(arbitraryPoint.lat) * sin(knownPoint.lat)
-        val coss = cos(arbitraryPoint.lat) * cos(knownPoint.lat) * cos(abs(arbitraryPoint.lon - knownPoint.lon))
-        acos(sins + coss)
+        val antiLon = if (knownPoint.lon >= 0) -1 * (180 - knownPoint.lon) else (180 + knownPoint.lon)
+        if (arbitraryPoint.lat == -1 * knownPoint.lat && arbitraryPoint.lon == antiLon) Pi
+        else {
+          val sins = sin(arbitraryPoint.lat) * sin(knownPoint.lat)
+          val coss = cos(arbitraryPoint.lat) * cos(knownPoint.lat) * cos(abs(arbitraryPoint.lon - knownPoint.lon))
+          acos(sins + coss)
+        }
       }
     }
 
-    EARTH_RADIUS * deltaSig
+    radius * deltaSig
   }
 
   /**
