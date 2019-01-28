@@ -9,6 +9,16 @@ import org.scalatest.prop.Checkers
 
 trait VisualizationTest extends FunSuite {//} with Checkers {
   implicit val doubleEquality = TolerantNumerics.tolerantDoubleEquality(0.01)
+  val colors = List(
+    (60.0, Color(255, 255, 255)),
+    (32.0, Color(255, 0, 0)),
+    (12.0, Color(255, 255, 0)),
+    (0.0, Color(0, 255, 255)),
+    (-15.0, Color(0, 0, 255)),
+    (-27.0, Color(255, 0, 255)),
+    (-50.0, Color(33, 0, 107)),
+    (-60.0, Color(0, 0, 0))
+  )
 
   test("greatCircleDistance - A to A") {
     val a = Location(51.477500, -0.461388)
@@ -55,20 +65,22 @@ trait VisualizationTest extends FunSuite {//} with Checkers {
   }
 
   test("interpolateColor") {
-    val points = List(
-      (60.0, Color(255, 255, 255)),
-      (32.0, Color(255, 0, 0)),
-      (12.0, Color(255, 255, 0)),
-      (0.0, Color(0, 255, 255)),
-      (-15.0, Color(0, 0, 255)),
-      (-27.0, Color(255, 0, 255)),
-      (-50.0, Color(33, 0, 107)),
-      (-60.0, Color(0, 0, 0))
-    )
-
-    assert(Visualization.interpolateColor(points, 0.0) === Color(0, 255, 255), "Equals a point")
-    assert(Visualization.interpolateColor(points, 6.0) === Color(127, 255, 127), "Halfway between points 1")
-    assert(Visualization.interpolateColor(points, 46.0) === Color(255, 127, 127), "Halfway between points 1")
+    assert(Visualization.interpolateColor(colors, 0.0) === Color(0, 255, 255), "Equals a point")
+    assert(Visualization.interpolateColor(colors, 6.0) === Color(127, 255, 127), "Halfway between points 1")
+    assert(Visualization.interpolateColor(colors, 46.0) === Color(255, 127, 127), "Halfway between points 1")
   }
 
+  test("visualize") {
+    val location_temps = List(
+      (Location(0, 0), 20.0),
+      (Location(90, 0), 60.0),
+      (Location(90, 90), 20.0),
+      (Location(-90, -180), 15.0),
+      (Location(0, -90), -25.0),
+      (Location(0, 90), -60.0)
+    )
+
+    val image = Visualization.visualize(location_temps, colors)
+    image.output(new java.io.File("target/testImage.png"))
+  }
 }

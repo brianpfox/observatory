@@ -84,7 +84,34 @@ object Visualization extends SparkSessionTrait {
     * @return A 360×180 image where each pixel shows the predicted temperature at its location
     */
   def visualize(temperatures: Iterable[(Location, Temperature)], colors: Iterable[(Temperature, Color)]): Image = {
-    ???
+    // Generate RDD of every pixel (every location)
+    val locations = for {
+      lat <-  90.until(-90, -1)
+      lon <- -180 until 180
+    } yield Location(lat, lon)
+
+    val locationsRDD = spark.sparkContext.parallelize(locations)
+
+    // Iterate on RDD to predict temperature for each pixel, then get an interpolated color for each predicted temp
+    val loc_color_rdd = locationsRDD
+      .map(loc => (loc, predictTemperature(temperatures, loc)))
+      .map(loc_temp => (loc_temp._1, interpolateColor(colors, loc_temp._2)))
+
+    val loc_pixel_rdd = loc_color_rdd.map(_ match {
+      case (location: Location, color: Color) => {
+        (location, Pixel(color.red, color.blue, color.green, 1))
+      }
+    })
+
+    loc_pixel_rdd.sortBy(_ match {
+      case (location: Location, pixel: Pixel) => {
+        location.lat * -1 * 360 + location.lon + 180
+      }
+    })
+
+    val loc_pixel = loc_pixel_rdd.collect()
+    val pixels = loc_pixel.map(_._2)
+    Image(360, 180, pixels)
   }
 
 }
